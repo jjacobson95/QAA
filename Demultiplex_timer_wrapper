@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+/usr/bin/time -v ./Demultiplex_Quality_score_plotter.py -R_file 15_R1.fastq.gz
