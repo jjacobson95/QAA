@@ -1,7 +1,7 @@
 ---
 title: "QAA Assignment"
 author: "Jeremy Jacobson"
-date: "9/1/2021"
+date: "9/6/2021"
 output: html_document
 ---
 
@@ -12,6 +12,28 @@ library(tidyverse)
 setwd("/Users/jeremyjacobson/bioinformatics/Bi623/QAA")
 ```
 
+## Talapas Modules and Setup  
+<br> 
+
+##### Modules installed in conda environment 'QAA' in the following order using **"conda install ____"**  
+
+>fastqc/0.11.5  
+easybuild  
+STAR 2.7.9a  
+numpy 1.13.1  
+pysam 0.13.0-intel-2017b-Python-3.6.3  
+matplotlib  2.0.1-Python-3.6.1  
+HTSeq 0.9.1-Python-3.6.1 - *installed from pip*  
+  
+*All work on talapas was done in an interactive node using:*  
+**srun --account=bgmp --partition=bgmp --nodes=1 --ntasks-per-node=1 --time=1-0:00:00 --cpus-per-task=1 --pty bash**  
+*All scripts/commands were timed using "**usr/bin/time -v**"*  
+*All scripts were batched in talapas using:*  
+**sbatch --account=bgmp --partition=bgmp --time=1-0:00:00 --cpus-per-task=1 ./____**  
+ *In the case of trimmomatic and STAR, 8 CPUs were used for multithreading functionality.*  
+  
+<br>  
+  
 ## Read Quality Score Distributions
 
 ### 15_3C_mbnl_S11_L008 Read 1  
@@ -20,7 +42,8 @@ setwd("/Users/jeremyjacobson/bioinformatics/Bi623/QAA")
 ![**Per Base Quality Score**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/Output_graphs_py/15_R1.png) 
   
 ![**Per Base N Content**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/15_3C_mbnl_S11_L008_R1_001_fastqc/Images/per_base_n_content.png)  
-
+<br>  
+  
 ### 15_3C_mbnl_S11_L008 Read 2  
 
 ![**Per Base Quality Score Distribution**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/15_3C_mbnl_S11_L008_R2_001_fastqc/Images/per_base_quality.png)  
@@ -29,7 +52,7 @@ setwd("/Users/jeremyjacobson/bioinformatics/Bi623/QAA")
 
   
 ![**Per Base N Content**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/15_3C_mbnl_S11_L008_R2_001_fastqc/Images/per_base_n_content.png)    
-  
+<br>  
   
 ### 24_4A_control_S18_L008 Read 1
   
@@ -38,7 +61,7 @@ setwd("/Users/jeremyjacobson/bioinformatics/Bi623/QAA")
 ![**Per Base Quality Score**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/Output_graphs_py/24_R1.png) 
   
 ![**Per Base N Content**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/24_4A_control_S18_L008_R1_001_fastqc/Images/per_base_n_content.png) 
-  
+<br>  
   
 ### 24_4A_control_S18_L008 Read 2  
   
@@ -48,35 +71,81 @@ setwd("/Users/jeremyjacobson/bioinformatics/Bi623/QAA")
   
 ![**Per Base N Content**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/24_4A_control_S18_L008_R2_001_fastqc/Images/per_base_n_content.png)  
   
+<br>  
+  
 ##### **Question 1**  
   
-> All paired graphs are consistent with each other. Increased N content is correlated with a decreased quality score - this is most distinct for base position 1  
-*Example code:  
-fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/15_3C_mbnl_S11_L008_R1_001.fastq.gz -o .*  
+> All paired graphs are consistent with each other. Increased N content is correlated with a decreased quality score. This is most visually distinct in base position 1.  
+Example code:  
+**fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/15_3C_mbnl_S11_L008_R1_001.fastq.gz -o .**
+
+
+**Python 'Per Base N Content' graphs were generated using Demultiplexing_Quality_score_plotter.py**  
+"-R_file" argument was used to choose file. Output file was manually changed.  
+Python Code:  
+#!/usr/bin/env python
+import Bioinfo  
+import matplotlib  
+import numpy as np  
+import matplotlib.pyplot as plt  
+import argparse  
+  
+#argparse  
+parser = argparse.ArgumentParser()  
+parser.add_argument("-R_file", default=1)  
+  
+args = parser.parse_args()  
+file = args.R_file  
+  
+#Reads with 101 characters  
+phred_list =[]  
+fred_list =Bioinfo.populate_list(file)  
+phred_list = fred_list[0]  
+#sums_list = phred_list[:]  
+line_count = fred_list[1]  
+  
+print("phred_list output: ", phred_list)  
+print("line_count output: ", line_count)  
+  
+count = 0  
+for value in phred_list:  
+    phred_list[count] = value/(line_count/4)  
+    count += 1  
+  
+plt.bar(range(101), phred_list)  
+plt.title('Quality Score Distribution')  
+plt.xlabel('Base Number')  
+plt.ylabel('Quality Score Mean')  
+plt.grid(True)  
+plt.savefig("/home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/24_R2.png")  
+plt.show()  
+  
   
 ##### **Question 2**  
 >The graphs generated using part of the demultiplexing script display nearly the same information as those produced through fastqc. The main difference is that fastqc provides a range of scores and a trendline. The python graphs allign almost perfectly to the trendline.  
 Runtime:  
-- Fastqc took approximately 1min30seconds (and produced numerous figures)
-- Python Script took approximately 2min45seconds.  
-Fastqc is written in java which is a compiled language and generally faster than python.  
+- Fastqc: 1minute 30seconds.  
+- Python: 2minutes 45seconds.  
+Fastqc is written in java which is a compiled language and generally faster than python. It was able to generate numerous figures in the time it took python to produce one.
 
   
 ##### **Question3**  
->Both libraries follow the same pattern. The quality scores near the earliest base positions are the lowest, hovering at 32 for R1 and 30 for R2. The rest of the scores are around 39/40 for R1 and 37/38 for R2. The last nucleotide of each library and read also has lower quality. R1 is higher quality than R2 for both libraries because it was subjected to less chemicals and had less time to degrade before sequencing.
+>Both libraries follow the same pattern. The quality scores near the earliest base positions are the lowest, hovering at 32 for R1 and 30 for R2. The rest of the qscores are around 39/40 for R1 and 37/38 for R2. The last nucleotide of each library and read also has lower quality. R1 is higher quality than R2 for both libraries because it was subjected to less chemicals and had less time to degrade before sequencing.
   
   
 ## **Adapter Trimming Comparison**  
 #### Pt. 1: Cutadapt  
 > Example code:  
-cutadapt -b AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -o ./15_R1.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/15_3C_mbnl_S11_L008_R1_001.fastq  
+**cutadapt -b AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -o ./15_R1.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/15_3C_mbnl_S11_L008_R1_001.fastq**  
+Runtime: 1minute 34seconds
 
 #### Pt. 2: Trimmomatic  
 > Example code:  
-trimmomatic PE -threads 8 /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R1.fastq  /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R2.fastq \  
+**trimmomatic PE -threads 8 /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R1.fastq  /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R2.fastq \  
 15_R1_001_trimmo.fastq.gz 15_R1_001_untrimmo.fastq.gz \  
 15_R2_001_trimmo.fastq.gz 15_R2_001_untrimmo.fastq.gz \  
-LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35  
+LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35**  
+Runtime: 4minutes 37seconds  
 
 
 ##### Trimmed Reads Results
@@ -108,11 +177,28 @@ p + labs(title ="Read Length Distribution by Library/Read",
 ##### Legend:
 **Green: 15_3C_mbnl_S11_L008_R1**      |      **Red: 15_3C_mbnl_S11_L008_R2**  
 **Blue: 24_4A_control_S18_L008_R1**    |     **Yellow: 24_4A_control_S18_L008_R2**  
-
-> In each paired library, the second read (red and yellow) had a decreased proportion of full length (101bp) sequences. Read 2 was likely trimmed more frequently due to lower quality scores resulting from increased exponsure time / chemical degradation. This single plot also indicates that library 24_4A_control_S18_L008 is smaller than 15_3C_mbnl_S11_L008 (fewer reads).
+<br>
   
+> In each paired library, the second read (red and yellow) had a decreased proportion of full length (101bp) sequences. Read 2 was likely trimmed more frequently due to lower quality scores resulting from increased exponsure time / chemical degradation. This single plot also demonstrates that library 24_4A_control_S18_L008 has fewer overall reads than 15_3C_mbnl_S11_L008.
+<br>  
   
 ## Alignment and Strand-Specificity  
+<br>
+
+  
+#### STAR Assembly:  
+> Example Code:  
+**STAR --runThreadN 8 --runMode genomeGenerate --genomeDir /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.dna.ens104.star_2.7.9a --genomeFastaFiles /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.dna.primary_assembly.fa --sjdbGTFfile /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.104.gtf**  
+Runtime: 19minutes 17 seconds  
+<br>
+
+#### STAR Alignment:  
+> Example code:  
+**STAR --runThreadN 8 --runMode alignReads --outFilterMultimapNmax 3 --outSAMunmapped Within KeepPairs --alignIntronMax 1000000 --alignMatesGapMax 1000000 --readFilesCommand zcat --readFilesIn /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R1_001_trimmo.fastq.gz /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R2_001_trimmo.fastq.gz --genomeDir /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.dna.ens104.star_2.7.9a --outFileNamePrefix Mus_musculus_15_R2_001**  
+Runtime: 1minute 16seconds
+
+
+
   
 ##### Mus_musculus_15_001_Aligned.out.sam
 >Mapped Reads: 14432097   (97.3%)  
@@ -120,45 +206,76 @@ Unmapped Reads: 405109    (2.7%)
   
 ##### Mus_musculus_24_001_Aligned.out.sam
 >Mapped Reads: 19778684   (96.6%)  
-Unmapped Reads: 712488    (3.4%)
+Unmapped Reads: 712488    (3.4%)  
   
-*Mapped and Unmapped reads were found using Demultiplexing_Quality_score_plotter.py*  
+*Mapped and Unmapped reads were found using Map_reader.py*  
 
-
+#! /usr/bin/python3.6  
   
-   
-#### HTSeq Results
+alignment_tracker = {}  
+mapped = 0  
+unmapped = 0  
+with open ("/projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus_24_001Aligned.out.sam", "r") as fh:  
+        for line in fh:  
+            if not line.startswith("@"):  
+                line = line.split("\t")  
+                flag = (int(line[1]))  
+                if((flag & 4) != 4) and ((flag & 256) != 256):  
+                        mapped +=1  
+                else:  
+                    if ((flag & 256) != 256):  
+                        unmapped +=1  
+                    
+print ("Mapped read count:", mapped)  
+print("Unmapped read count:", unmapped)  
+  
+  
+  
+### HTSeq Results
+#### HTSeq:  
+> Example code:  
+**htseq-count stranded=yes Mus_musculus_24_001Aligned.out.sam Mus_musculus.GRCm39.104.gtf > Mus_musculus_24_001_stranded_Aligned.out.sam**  
+<br> 
+
+#### Proportion of mapped reads:  
+> Example code:  
+**grep -v "\\t0$" Mus_musculus_15_001_stranded_Aligned.out.sam  | awk '{if ($1 ~ "ENS.\*") sum+=$2; else sum_two+=$2} END {print (sum/(sum_two+sum))}'**  
+
+<br>  
+
+#### HtSeq Results  
 > **Mus_musculus_15_001_stranded_Aligned.out.sam**  
 __no_feature	6612743  
 __ambiguous	6184  
 __too_low_aQual	13778  
 __not_aligned	195207  
 __alignment_not_unique	325109  
-Proportion of mapped reads = 0.0357995  
+Proportion of mapped reads = **0.0357995**  
+<br>
 **Mus_musculus_15_001_unstranded_Aligned.out.sam**  
 __no_feature	559675  
 __ambiguous	341555  
 __too_low_aQual	13778  
 __not_aligned	195207  
 __alignment_not_unique	325109  
-Proportion of mapped reads = 0.806524  
+Proportion of mapped reads = **0.806524**  
+<br>
 **Mus_musculus_24_001_stranded_Aligned.out.sam**  
 __no_feature	9052611  
 __ambiguous	7141  
 __too_low_aQual	11069  
 __not_aligned	350360  
 __alignment_not_unique	481260  
-Proportion of mapped reads = 0.033492  
+Proportion of mapped reads = **0.033492**  
+<br>
 **Mus_musculus_24_001_unstranded_Aligned.out.sam**  
 __no_feature	829369  
 __ambiguous	446219  
 __too_low_aQual	11069  
 __not_aligned	350360  
 __alignment_not_unique	481260  
-Proportion of mapped reads = 0.79325  
+Proportion of mapped reads = **0.79325**  
 
-> **Example bash code to find proportion of mapped reads:**  
-grep -v "\t0$" Mus_musculus_15_001_stranded_Aligned.out.sam  | awk '{if ($1 ~ "ENS.*") sum+=$2; else sum_two+=$2} END {print (sum/(sum_two+sum))}'  
   
 #### Final Conclusion:
 I propose that these data are not strand specific due to the above results. In libraries, 24_4A_control_S18_L008 and 15_3C_mbnl_S11_L008, the unstranded reads that mapped to genes were 80.6% and 79.3% respectively, likewise, only 3.6% and 3.3% of the stranded reads mapped to genes. As these were RNA-Seq libraries, we'd expect a high percentage of reads to map to genes.  
