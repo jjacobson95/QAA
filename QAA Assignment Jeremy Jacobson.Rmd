@@ -2,14 +2,25 @@
 title: "QAA Assignment"
 author: "Jeremy Jacobson"
 date: "9/6/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
+header-includes:
+- \usepackage{float}
+- \let\origfigure\figure
+- \let\endorigfigure\endfigure
+- \renewenvironment{figure}[1][2] {
+  \expandafter\origfigure\expandafter[H]} {
+  \endorigfigure}
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(rmarkdown)
 library(tidyverse)
+library(knitr)
 setwd("/Users/jeremyjacobson/bioinformatics/Bi623/QAA")
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
 ```
 
 ## Talapas Modules and Setup  
@@ -36,7 +47,7 @@ HTSeq 0.9.1-Python-3.6.1 - *installed from pip*
   
 ## Read Quality Score Distributions
 
-### 15_3C_mbnl_S11_L008 Read 1  
+## 15_3C_mbnl_S11_L008 Read 1  
 ![**Per Base Quality Score Distribution**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/15_3C_mbnl_S11_L008_R1_001_fastqc/Images/per_base_quality.png)  
   
 ![**Per Base Quality Score**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/Output_graphs_py/15_R1.png) 
@@ -44,7 +55,7 @@ HTSeq 0.9.1-Python-3.6.1 - *installed from pip*
 ![**Per Base N Content**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/15_3C_mbnl_S11_L008_R1_001_fastqc/Images/per_base_n_content.png)  
 <br>  
   
-### 15_3C_mbnl_S11_L008 Read 2  
+## 15_3C_mbnl_S11_L008 Read 2  
 
 ![**Per Base Quality Score Distribution**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/15_3C_mbnl_S11_L008_R2_001_fastqc/Images/per_base_quality.png)  
   
@@ -54,7 +65,7 @@ HTSeq 0.9.1-Python-3.6.1 - *installed from pip*
 ![**Per Base N Content**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/15_3C_mbnl_S11_L008_R2_001_fastqc/Images/per_base_n_content.png)    
 <br>  
   
-### 24_4A_control_S18_L008 Read 1
+## 24_4A_control_S18_L008 Read 1
   
 ![**Per Base Quality Score Distribution**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/24_4A_control_S18_L008_R1_001_fastqc/Images/per_base_quality.png)  
 
@@ -63,7 +74,7 @@ HTSeq 0.9.1-Python-3.6.1 - *installed from pip*
 ![**Per Base N Content**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/24_4A_control_S18_L008_R1_001_fastqc/Images/per_base_n_content.png) 
 <br>  
   
-### 24_4A_control_S18_L008 Read 2  
+## 24_4A_control_S18_L008 Read 2  
   
 ![**Per Base Quality Score Distribution**](/Users/jeremyjacobson/bioinformatics/Bi623/QAA/Output_files/24_4A_control_S18_L008_R2_001_fastqc/Images/per_base_quality.png)  
   
@@ -137,15 +148,27 @@ Fastqc is written in java which is a compiled language and generally faster than
 #### Pt. 1: Cutadapt  
 > Example code:  
 **cutadapt -b AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -o ./15_R1.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/15_3C_mbnl_S11_L008_R1_001.fastq**  
-Runtime: 1minute 34seconds
-
+Average Runtime: 1minute 30seconds
+Results:  
+15_3C_mbnl_S11_L008_R1_001:  
+Adapter:AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -Trimmed 554754x (7.1%)  
+15_3C_mbnl_S11_L008_R2_001:  
+Adapter:AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -Trimmed 582968x (7.5%)  
+24_4A_control_S18_L008_R1_001:  
+Adapter:AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -Trimmed 489040x (4.7%) 
+24_4A_control_S18_L008_R2_001:  
+Adapter:AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -Trimmed 598531x (5.7%) 
+ 
+  
+  
+  
 #### Pt. 2: Trimmomatic  
 > Example code:  
 **trimmomatic PE -threads 8 /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R1.fastq  /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R2.fastq \  
 15_R1_001_trimmo.fastq.gz 15_R1_001_untrimmo.fastq.gz \  
 15_R2_001_trimmo.fastq.gz 15_R2_001_untrimmo.fastq.gz \  
 LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35**  
-Runtime: 4minutes 37seconds  
+Average Runtime: 4minutes 37seconds  
 
 
 ##### Trimmed Reads Results
@@ -157,6 +180,7 @@ Input Read Pairs: 10515874 Both Surviving: 10245586 (97.43%) Forward Only Surviv
   
 #### Trimmed Read Distribution Plot
   
+<br>  
 ```{r, echo=FALSE, message=FALSE}
 
 read_delim("read_distributions/15_R1_read_distribution", col_names = FALSE) %>% rename("Number_of_Reads" = "X1", "Read_Length" = "X2")-> R1_15
@@ -166,20 +190,30 @@ R2_24 <- read_delim("read_distributions/24_R2_read_distribution", col_names = FA
 
 
 p <- ggplot() + geom_line(data = R1_24,aes(Read_Length, Number_of_Reads), color = "forest green", size = 1.2, alpha = 1) +
-   geom_line(data = R2_24,aes(Read_Length, Number_of_Reads), color = "red", size = 1, alpha = 0.8) +
-   geom_line(data = R1_15,aes(Read_Length, Number_of_Reads), color = "blue", size = 1, alpha = 1) +
-   geom_line(data = R2_15,aes(Read_Length, Number_of_Reads), color = "yellow", size = 1, alpha = 0.8)
+   geom_line(data = R2_24,aes(Read_Length, Number_of_Reads), color = "orange", size = 1, alpha = 0.9) 
 
-p + labs(title ="Read Length Distribution by Library/Read",
-       y = "Number of Reads", x = "Read Length (bp)") 
+p + labs(title ="15_3C_mbnl_S11_L008 Read Length Distribution",
+       y = "Number of Reads", x = "Read Length (bp)")
+
 ```
   
-##### Legend:
+<br> 
+  
+```{r, echo=FALSE, message=FALSE}
+q <- ggplot() +  geom_line(data = R1_15,aes(Read_Length, Number_of_Reads), color = "blue", size = 1, alpha = 1) +
+   geom_line(data = R2_15,aes(Read_Length, Number_of_Reads), color = "red", size = 1, alpha = 0.8)
+
+
+q + labs(title ="24_4A_control_S18_L008 Read Length Distribution",
+       y = "Number of Reads", x = "Read Length (bp)")
+```
+  
+##### Legend:  
 **Green: 15_3C_mbnl_S11_L008_R1**      |      **Red: 15_3C_mbnl_S11_L008_R2**  
-**Blue: 24_4A_control_S18_L008_R1**    |     **Yellow: 24_4A_control_S18_L008_R2**  
+**Blue: 24_4A_control_S18_L008_R1**    |     **Orange: 24_4A_control_S18_L008_R2**  
 <br>
   
-> In each paired library, the second read (red and yellow) had a decreased proportion of full length (101bp) sequences. Read 2 was likely trimmed more frequently due to lower quality scores resulting from increased exponsure time / chemical degradation. This single plot also demonstrates that library 24_4A_control_S18_L008 has fewer overall reads than 15_3C_mbnl_S11_L008.
+> In each paired library, the second read (red and yellow) had a decreased proportion of full length (101bp) sequences. Read 2 was likely trimmed more frequently due to lower quality scores resulting from increased exponsure time / chemical degradation. Read 2 likely had more adapter trimming as well. These plots also demonstrate that library 24_4A_control_S18_L008 has fewer overall reads than 15_3C_mbnl_S11_L008.
 <br>  
   
 ## Alignment and Strand-Specificity  
@@ -191,7 +225,7 @@ p + labs(title ="Read Length Distribution by Library/Read",
 **STAR --runThreadN 8 --runMode genomeGenerate --genomeDir /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.dna.ens104.star_2.7.9a --genomeFastaFiles /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.dna.primary_assembly.fa --sjdbGTFfile /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.104.gtf**  
 Runtime: 19minutes 17 seconds  
 <br>
-
+  
 #### STAR Alignment:  
 > Example code:  
 **STAR --runThreadN 8 --runMode alignReads --outFilterMultimapNmax 3 --outSAMunmapped Within KeepPairs --alignIntronMax 1000000 --alignMatesGapMax 1000000 --readFilesCommand zcat --readFilesIn /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R1_001_trimmo.fastq.gz /home/jjacobso/bgmp/bioinformatics/Bi623/Assignments/QAA/15_R2_001_trimmo.fastq.gz --genomeDir /projects/bgmp/jjacobso/bioinformatics/Bi623/Assignments/QAA/Alignment_stuff/Mus_musculus.GRCm39.dna.ens104.star_2.7.9a --outFileNamePrefix Mus_musculus_15_R2_001**  
@@ -278,7 +312,7 @@ Proportion of mapped reads = **0.79325**
 
   
 #### Final Conclusion:
-I propose that these data are not strand specific due to the above results. In libraries, 24_4A_control_S18_L008 and 15_3C_mbnl_S11_L008, the unstranded reads that mapped to genes were 80.6% and 79.3% respectively, likewise, only 3.6% and 3.3% of the stranded reads mapped to genes. As these were RNA-Seq libraries, we'd expect a high percentage of reads to map to genes.  
+I propose that these data are strand specific due to the above results. In libraries, 24_4A_control_S18_L008 and 15_3C_mbnl_S11_L008, the unstranded reads that mapped to genes were 80.6% and 79.3% respectively, likewise, only 3.6% and 3.3% of the stranded reads mapped to genes. Unstranded reads should theoretically map to 50% while stranded reads should map to either 100% or 0%. In this case, the stranded reads would likely be mapped at a high percentage to the reverse strand.
   
   
   
