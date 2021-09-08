@@ -1,9 +1,0 @@
-#!/usr/bin/bash
-
-/usr/bin/time -v cutadapt -b AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -o ./15_R1.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/15_3C_mbnl_S11_L008_R1_001.fastq.gz
-
-/usr/bin/time -v cutadapt -b AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o ./15_R2.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/15_3C_mbnl_S11_L008_R2_001.fastq.gz
-
-/usr/bin/time -v cutadapt -b AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -o ./24_R1.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/24_4A_control_S18_L008_R1_001.fastq.gz
-
-/usr/bin/time -v cutadapt -b AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o ./24_R2.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/24_4A_control_S18_L008_R2_001.fastq.gz
