@@ -1,6 +1,6 @@
 ---
 title: "QAA Assignment"
-author: "Jeremy Jacobson"
+author: "Jeremy Jacobson" 
 date: "9/6/2021"
 output:
   html_document: default
